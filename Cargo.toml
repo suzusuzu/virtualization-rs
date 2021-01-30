@@ -1,10 +1,14 @@
 [package]
 name = "virtualization-rs"
 version = "0.1.0"
-authors = ["s.suzugamine <s.suzugamine@gmail.com>"]
+authors = ["Sotetsu Suzugamine <s.suzugamine@gmail.com>"]
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+license = "MIT"
+description = "virtualization-rs provides the API of the Apple Virtualization.framework in Rust language."
+repository = "https://github.com/suzusuzu/virtualization-rs"
+readme = "README.md"
+keywords = ["macOS", "Virtualization", "VM"]
+categories = ["API bindings"]
 
 [dependencies]
 libc = "0.2.82"
