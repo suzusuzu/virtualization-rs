@@ -1,5 +1,7 @@
 # virtualization-rs
 
+[![Crates](https://img.shields.io/crates/v/virtualization-rs.svg)](https://crates.io/crates/virtualization-rs)
+
 ## Rust bindings for [Virtualization.framework](https://developer.apple.com/documentation/virtualization?language=objc)
 
 virtualization-rs provides the API of the Apple Virtualization.framework in Rust language.
