@@ -6,6 +6,13 @@
 
 virtualization-rs provides the API of the Apple Virtualization.framework in Rust language.
 
+## Usage
+
+```
+[dependencies]
+virtualization-rs = "0.1.0"
+```
+
 ## Example
 
 The example is inspired from [SimpleVM](https://github.com/KhaosT/SimpleVM).
