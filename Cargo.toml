@@ -8,7 +8,7 @@ description = "virtualization-rs provides the API of the Apple Virtualization.fr
 repository = "https://github.com/suzusuzu/virtualization-rs"
 readme = "README.md"
 keywords = ["macOS", "Virtualization", "VM"]
-categories = ["API bindings"]
+categories = ["api-bindings"]
 
 [dependencies]
 libc = "0.2.82"
