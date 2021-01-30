@@ -12,3 +12,5 @@ The example is inspired from [SimpleVM](https://github.com/KhaosT/SimpleVM).
 make release
 ./target/release/examples/simplevm --kernel ubuntu/vmlinuz --initrd ubuntu/initrd --disk ubuntu/ubuntu.iso
 ```
+
+![simplevm](./img/simplevm.gif)
