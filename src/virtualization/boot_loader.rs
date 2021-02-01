@@ -1,12 +1,23 @@
+//! boot loader module
 use crate::base::{Id, NSString, NSURL};
 
 use objc::rc::StrongPtr;
 use objc::{class, msg_send, sel, sel_impl};
 
+/// common behaviors for booting
 pub trait VZBootLoader {
     unsafe fn id(&self) -> Id;
 }
 
+/// builder for VZLinuxBootLoader
+/// # Examples
+/// ```rust
+/// let boot_loader = VZLinuxBootLoaderBuilder::new()
+///     .kernel_url(kernel_url)
+///     .initial_ramdisk_url(initial_ramdisk_url)
+///     .command_line(command_line)
+///     .build();
+/// ```
 pub struct VZLinuxBootLoaderBuilder<KernelURL, InitialRamdiskURL, CommandLine> {
     kernel_url: KernelURL,
     initial_ramdisk_url: InitialRamdiskURL,
@@ -70,6 +81,7 @@ impl VZLinuxBootLoaderBuilder<String, String, String> {
     }
 }
 
+///  bootLoader for Linux kernel
 pub struct VZLinuxBootLoader(StrongPtr);
 
 impl VZLinuxBootLoader {

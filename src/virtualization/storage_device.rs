@@ -1,13 +1,30 @@
+//! storage device module
+
 use crate::base::{Id, NSError, NSURL};
 
 use objc::runtime::BOOL;
 use objc::{class, msg_send, sel, sel_impl};
 use objc::{rc::StrongPtr, runtime::NO, runtime::YES};
 
+/// common configure of storage device attachment
 pub trait VZStorageDeviceAttachment {
     unsafe fn id(&self) -> Id;
 }
 
+/// builder for VZDiskImageStorageDeviceAttachment
+/// # Examples
+/// ```rust
+/// let block_attachment = match VZDiskImageStorageDeviceAttachmentBuilder::new()
+///     .path(canonicalize(&disk).unwrap().into_os_string().into_string().unwrap())
+///     .build()
+/// {
+///     Ok(x) => x,
+///     Err(err) => {
+///         err.dump();
+///         return;
+///     }
+/// };
+/// ```
 pub struct VZDiskImageStorageDeviceAttachmentBuilder<Path, ReadOnly> {
     path: Path,
     read_only: ReadOnly,
@@ -51,6 +68,7 @@ impl VZDiskImageStorageDeviceAttachmentBuilder<String, bool> {
     }
 }
 
+/// configure of disk image storage device attachment
 pub struct VZDiskImageStorageDeviceAttachment(StrongPtr);
 
 impl VZDiskImageStorageDeviceAttachment {
@@ -78,10 +96,12 @@ impl VZStorageDeviceAttachment for VZDiskImageStorageDeviceAttachment {
     }
 }
 
+/// configure of storage device
 pub trait VZStorageDeviceConfiguration {
     unsafe fn id(&self) -> Id;
 }
 
+/// configure of storage device through the Virtio interface
 pub struct VZVirtioBlockDeviceConfiguration(StrongPtr);
 
 impl VZVirtioBlockDeviceConfiguration {

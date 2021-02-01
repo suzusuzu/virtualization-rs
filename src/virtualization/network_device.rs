@@ -1,12 +1,16 @@
+//! network device module
+
 use crate::base::{Id, NSString};
 
 use objc::rc::StrongPtr;
 use objc::{class, msg_send, sel, sel_impl};
 
+/// common behaviors for network device attachment
 pub trait VZNetworkDeviceAttachment {
     unsafe fn id(&self) -> Id;
 }
 
+/// configure of NAT network device attachment
 pub struct VZNATNetworkDeviceAttachment(StrongPtr);
 
 impl VZNATNetworkDeviceAttachment {
@@ -22,6 +26,7 @@ impl VZNetworkDeviceAttachment for VZNATNetworkDeviceAttachment {
     }
 }
 
+/// common behaviors for bridge network interface
 pub trait VZBridgedNetworkInterface {
     unsafe fn id(&self) -> Id;
     unsafe fn localized_display_name(&self) -> NSString {
@@ -36,6 +41,7 @@ pub trait VZBridgedNetworkInterface {
     }
 }
 
+/// configure of bridge network device attachment
 pub struct VZBridgedNetworkDeviceAttachment(StrongPtr);
 
 impl VZBridgedNetworkDeviceAttachment {
@@ -54,6 +60,7 @@ impl VZNetworkDeviceAttachment for VZBridgedNetworkDeviceAttachment {
     }
 }
 
+/// MAC address
 pub struct VZMACAddress(pub StrongPtr);
 
 impl VZMACAddress {
@@ -76,10 +83,12 @@ impl VZMACAddress {
     }
 }
 
+/// common configure of network device
 pub trait VZNetworkDeviceConfiguration {
     unsafe fn id(&self) -> Id;
 }
 
+/// configure of network device through the Virtio interface
 pub struct VZVirtioNetworkDeviceConfiguration(StrongPtr);
 
 impl VZVirtioNetworkDeviceConfiguration {

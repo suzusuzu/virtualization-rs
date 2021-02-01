@@ -1,3 +1,5 @@
+//! base module
+
 use std::marker::PhantomData;
 use std::slice;
 use std::str;

@@ -1,12 +1,23 @@
+//! serial port module
+
 use crate::base::{Id, NSFileHandle};
 
 use objc::rc::StrongPtr;
 use objc::{class, msg_send, sel, sel_impl};
 
+/// common configure for serial port attachment
 pub trait VZSerialPortAttachment {
     unsafe fn id(&self) -> Id;
 }
 
+/// builder for VZFileHandleSerialPortAttachment
+/// # Examples
+/// ```rust
+/// let attachement = VZFileHandleSerialPortAttachmentBuilder::new()
+///     .file_handle_for_reading(file_handle_for_reading)
+///     .file_handle_for_writing(file_handle_for_writing)
+///     .build();
+/// ```
 pub struct VZFileHandleSerialPortAttachmentBuilder<R, W> {
     file_handle_for_reading: R,
     file_handle_for_writing: W,
@@ -52,6 +63,7 @@ impl VZFileHandleSerialPortAttachmentBuilder<NSFileHandle, NSFileHandle> {
     }
 }
 
+/// thie struct configure a serial port
 pub struct VZFileHandleSerialPortAttachment(StrongPtr);
 
 impl VZFileHandleSerialPortAttachment {
@@ -73,10 +85,12 @@ impl VZSerialPortAttachment for VZFileHandleSerialPortAttachment {
     }
 }
 
+/// configure of serial port
 pub trait VZSerialPortConfiguration {
     unsafe fn id(&self) -> Id;
 }
 
+/// configure of serial port through the Virtio interface
 pub struct VZVirtioConsoleDeviceSerialPortConfiguration(StrongPtr);
 
 impl VZVirtioConsoleDeviceSerialPortConfiguration {

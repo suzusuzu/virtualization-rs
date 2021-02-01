@@ -15,7 +15,7 @@ virtualization-rs = "0.1.0"
 
 ## Example
 
-The example is inspired from [SimpleVM](https://github.com/KhaosT/SimpleVM).
+The [example](https://github.com/suzusuzu/virtualization-rs/blob/main/examples/simplevm.rs) is inspired from [SimpleVM](https://github.com/KhaosT/SimpleVM).
 
 ```sh
 make release

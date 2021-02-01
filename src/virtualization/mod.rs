@@ -1,3 +1,5 @@
+//! Virtualization.framework module
+
 pub mod boot_loader;
 pub mod entropy_device;
 pub mod memory_device;

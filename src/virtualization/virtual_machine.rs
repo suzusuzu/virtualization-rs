@@ -1,3 +1,5 @@
+//! virtual machine module
+
 use crate::{
     base::{Id, NSArray, NSError},
     virtualization::boot_loader::VZBootLoader,
@@ -14,6 +16,20 @@ use objc::runtime::BOOL;
 use objc::{class, msg_send, sel, sel_impl};
 use objc::{rc::StrongPtr, runtime::YES};
 
+/// builder for VZVirtualMachineConfiguration
+/// # Examples
+/// ```rust
+/// let conf = VZVirtualMachineConfigurationBuilder::new()
+///     .boot_loader(boot_loader)
+///     .cpu_count(cpu_count)
+///     .memory_size(memory_size)
+///     .entropy_devices(vec![entropy])
+///     .memory_balloon_devices(vec![memory_balloon])
+///     .network_devices(vec![network_device])
+///     .serial_ports(vec![serial])
+///     .storage_devices(vec![block_device])
+///     .build();
+/// ```
 pub struct VZVirtualMachineConfigurationBuilder {
     conf: VZVirtualMachineConfiguration,
 }
@@ -93,6 +109,7 @@ impl VZVirtualMachineConfigurationBuilder {
     }
 }
 
+/// configure of virtual machine
 pub struct VZVirtualMachineConfiguration(StrongPtr);
 
 impl VZVirtualMachineConfiguration {
@@ -163,26 +180,35 @@ impl VZVirtualMachineConfiguration {
     }
 }
 
+/// virtual machine
 #[derive(Clone)]
 pub struct VZVirtualMachine(StrongPtr);
 
+/// state of virtual machine
 #[derive(Debug)]
 pub enum VZVirtualMachineState {
-    // Initial state before the virtual machine is started.
+    /// Initial state before the virtual machine is started.
     VZVirtualMachineStateStopped,
-    // Running virtual machine.
+
+    /// Running virtual machine.
     VZVirtualMachineStateRunning,
-    // A started virtual machine is paused. This state can only be transitioned from VZVirtualMachineStatePausing.
+
+    /// A started virtual machine is paused. This state can only be transitioned from VZVirtualMachineStatePausing.
     VZVirtualMachineStatePaused,
-    // The virtual machine has encountered an internal error.
+
+    /// The virtual machine has encountered an internal error.
     VZVirtualMachineStateError,
-    // The virtual machine is configuring the hardware and starting.
+
+    /// The virtual machine is configuring the hardware and starting.
     VZVirtualMachineStateStarting,
-    // The virtual machine is being paused. This is the intermediate state between VZVirtualMachineStateRunning and VZVirtualMachineStatePaused.
+
+    /// The virtual machine is being paused. This is the intermediate state between VZVirtualMachineStateRunning and VZVirtualMachineStatePaused.
     VZVirtualMachineStatePausing,
-    // The virtual machine is being resumed. This is the intermediate state between VZVirtualMachineStatePaused and VZVirtualMachineStateRunning. */
+
+    /// The virtual machine is being resumed. This is the intermediate state between VZVirtualMachineStatePaused and VZVirtualMachineStateRunning. */
     VZVirtualMachineStateResuming,
-    // Other
+
+    /// Other
     Other,
 }
 
