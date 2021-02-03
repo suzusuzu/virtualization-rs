@@ -15,7 +15,7 @@ macOS Big Sur
 
 ```
 [dependencies]
-virtualization-rs = "0.1.0"
+virtualization-rs = "0.1.2"
 ```
 
 ## Example
