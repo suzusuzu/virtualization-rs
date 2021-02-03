@@ -1,6 +1,7 @@
 # virtualization-rs
 
 [![Crates](https://img.shields.io/crates/v/virtualization-rs.svg)](https://crates.io/crates/virtualization-rs)
+[![Document](https://docs.rs/virtualization-rs/badge.svg)](https://docs.rs/virtualization-rs) 
 
 ## Rust bindings for [Virtualization.framework](https://developer.apple.com/documentation/virtualization?language=objc)
 
