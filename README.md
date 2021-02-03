@@ -6,6 +6,10 @@
 
 virtualization-rs provides the API of the Apple Virtualization.framework in Rust language.
 
+## Requirements
+
+macOS Big Sur
+
 ## Usage
 
 ```
