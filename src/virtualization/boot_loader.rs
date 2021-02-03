@@ -6,7 +6,7 @@ use objc::{class, msg_send, sel, sel_impl};
 
 /// common behaviors for booting
 pub trait VZBootLoader {
-    unsafe fn id(&self) -> Id;
+    fn id(&self) -> Id;
 }
 
 /// builder for VZLinuxBootLoader
@@ -72,12 +72,14 @@ impl<KernelURL, InitialRamdiskURL, CommandLine>
 }
 
 impl VZLinuxBootLoaderBuilder<String, String, String> {
-    pub unsafe fn build(self) -> VZLinuxBootLoader {
-        VZLinuxBootLoader::new(
-            self.kernel_url.as_str(),
-            self.initial_ramdisk_url.as_str(),
-            self.command_line.as_str(),
-        )
+    pub fn build(self) -> VZLinuxBootLoader {
+        unsafe {
+            VZLinuxBootLoader::new(
+                self.kernel_url.as_str(),
+                self.initial_ramdisk_url.as_str(),
+                self.command_line.as_str(),
+            )
+        }
     }
 }
 
@@ -90,10 +92,9 @@ impl VZLinuxBootLoader {
         initial_ramdisk_url: &str,
         command_line: &str,
     ) -> VZLinuxBootLoader {
-        let kernel_url_nsurl =
-            NSURL::file_url_with_path(kernel_url, objc::runtime::NO).absolute_url();
+        let kernel_url_nsurl = NSURL::file_url_with_path(kernel_url, false).absolute_url();
         let initial_ramdisk_url_nsurl =
-            NSURL::file_url_with_path(initial_ramdisk_url, objc::runtime::NO).absolute_url();
+            NSURL::file_url_with_path(initial_ramdisk_url, false).absolute_url();
         let command_line_nsstring = NSString::new(command_line);
         let p = StrongPtr::new(msg_send![class!(VZLinuxBootLoader), new]);
         let _: Id = msg_send![*p, setKernelURL: *kernel_url_nsurl.0];
@@ -104,7 +105,7 @@ impl VZLinuxBootLoader {
 }
 
 impl VZBootLoader for VZLinuxBootLoader {
-    unsafe fn id(&self) -> Id {
+    fn id(&self) -> Id {
         *self.0
     }
 }

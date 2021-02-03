@@ -8,7 +8,7 @@ use objc::{rc::StrongPtr, runtime::NO, runtime::YES};
 
 /// common configure of storage device attachment
 pub trait VZStorageDeviceAttachment {
-    unsafe fn id(&self) -> Id;
+    fn id(&self) -> Id;
 }
 
 /// builder for VZDiskImageStorageDeviceAttachment
@@ -62,9 +62,9 @@ impl<Path, ReadOnly> VZDiskImageStorageDeviceAttachmentBuilder<Path, ReadOnly> {
 }
 
 impl VZDiskImageStorageDeviceAttachmentBuilder<String, bool> {
-    pub unsafe fn build(self) -> Result<VZDiskImageStorageDeviceAttachment, NSError> {
+    pub fn build(self) -> Result<VZDiskImageStorageDeviceAttachment, NSError> {
         let read_only = if self.read_only { YES } else { NO };
-        VZDiskImageStorageDeviceAttachment::new(self.path.as_str(), read_only)
+        unsafe { VZDiskImageStorageDeviceAttachment::new(self.path.as_str(), read_only) }
     }
 }
 
@@ -77,7 +77,7 @@ impl VZDiskImageStorageDeviceAttachment {
         read_only: BOOL,
     ) -> Result<VZDiskImageStorageDeviceAttachment, NSError> {
         let i: Id = msg_send![class!(VZDiskImageStorageDeviceAttachment), alloc];
-        let path_nsurl = NSURL::file_url_with_path(path, objc::runtime::NO);
+        let path_nsurl = NSURL::file_url_with_path(path, false);
         let error = NSError::nil();
         let p = StrongPtr::new(
             msg_send![i, initWithURL:*path_nsurl.0 readOnly:read_only error:&(*error.0)],
@@ -91,31 +91,31 @@ impl VZDiskImageStorageDeviceAttachment {
 }
 
 impl VZStorageDeviceAttachment for VZDiskImageStorageDeviceAttachment {
-    unsafe fn id(&self) -> Id {
+    fn id(&self) -> Id {
         *self.0
     }
 }
 
 /// configure of storage device
 pub trait VZStorageDeviceConfiguration {
-    unsafe fn id(&self) -> Id;
+    fn id(&self) -> Id;
 }
 
 /// configure of storage device through the Virtio interface
 pub struct VZVirtioBlockDeviceConfiguration(StrongPtr);
 
 impl VZVirtioBlockDeviceConfiguration {
-    pub unsafe fn new<T: VZStorageDeviceAttachment>(
-        attachment: T,
-    ) -> VZVirtioBlockDeviceConfiguration {
-        let i: Id = msg_send![class!(VZVirtioBlockDeviceConfiguration), alloc];
-        let p = StrongPtr::new(msg_send![i, initWithAttachment:attachment.id()]);
-        VZVirtioBlockDeviceConfiguration(p)
+    pub fn new<T: VZStorageDeviceAttachment>(attachment: T) -> VZVirtioBlockDeviceConfiguration {
+        unsafe {
+            let i: Id = msg_send![class!(VZVirtioBlockDeviceConfiguration), alloc];
+            let p = StrongPtr::new(msg_send![i, initWithAttachment:attachment.id()]);
+            VZVirtioBlockDeviceConfiguration(p)
+        }
     }
 }
 
 impl VZStorageDeviceConfiguration for VZVirtioBlockDeviceConfiguration {
-    unsafe fn id(&self) -> Id {
+    fn id(&self) -> Id {
         *self.0
     }
 }

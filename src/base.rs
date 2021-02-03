@@ -5,8 +5,9 @@ use std::slice;
 use std::str;
 
 use block::Block;
+use libc::c_void;
 use objc::rc::StrongPtr;
-use objc::runtime::{Object, BOOL};
+use objc::runtime::{Object, BOOL, NO, YES};
 use objc::{class, msg_send, sel, sel_impl};
 
 #[link(name = "Virtualization", kind = "framework")]
@@ -15,8 +16,10 @@ extern "C" {}
 #[link(name = "Foundation", kind = "framework")]
 extern "C" {
     pub fn dispatch_queue_create(label: *const libc::c_char, attr: Id) -> Id;
-    pub fn dispatch_sync(queue: Id, block: &Block<(), ()>);
+    // pub fn dispatch_sync(queue: Id, block: &Block<(), ()>);
+    pub fn dispatch_sync(queue: Id, block: *mut c_void);
     pub fn dispatch_async(queue: Id, block: &Block<(), ()>);
+// pub fn dispatch_async(queue: Id, block: *mut c_void);
 }
 
 pub type Id = *mut Object;
@@ -28,24 +31,27 @@ pub struct NSArray<T> {
 }
 
 impl<T> NSArray<T> {
-    pub unsafe fn array_with_objects(objects: Vec<Id>) -> NSArray<T> {
-        let p = StrongPtr::new(
-            msg_send![class!(NSArray), arrayWithObjects:objects.as_slice().as_ptr() count:objects.len()],
-        );
-        NSArray {
-            p: p,
-            _phantom: PhantomData,
+    pub fn array_with_objects(objects: Vec<Id>) -> NSArray<T> {
+        unsafe {
+            let p = StrongPtr::new(
+                msg_send![class!(NSArray), arrayWithObjects:objects.as_slice().as_ptr() count:objects.len()],
+            );
+            NSArray {
+                p: p,
+                _phantom: PhantomData,
+            }
         }
     }
 
-    pub unsafe fn count(&self) -> usize {
-        msg_send![*self.p, count]
+    pub fn count(&self) -> usize {
+        unsafe { msg_send![*self.p, count] }
     }
 }
 
 impl<T: From<StrongPtr>> NSArray<T> {
-    pub unsafe fn object_at_index(&self, index: usize) -> T {
-        T::from(StrongPtr::retain(msg_send![*self.p, objectAtIndex: index]))
+    pub fn object_at_index(&self, index: usize) -> T {
+        debug_assert!(index < self.count());
+        unsafe { T::from(StrongPtr::retain(msg_send![*self.p, objectAtIndex: index])) }
     }
 }
 
@@ -53,26 +59,30 @@ const UTF8_ENCODING: usize = 4;
 pub struct NSString(pub StrongPtr);
 
 impl NSString {
-    pub unsafe fn new(string: &str) -> NSString {
-        let alloc: Id = msg_send![class!(NSString), alloc];
-        let p = StrongPtr::new(
-            msg_send![alloc, initWithBytes:string.as_ptr() length:string.len() encoding:UTF8_ENCODING as Id],
-        );
-        NSString(p)
+    pub fn new(string: &str) -> NSString {
+        unsafe {
+            let alloc: Id = msg_send![class!(NSString), alloc];
+            let p = StrongPtr::new(
+                msg_send![alloc, initWithBytes:string.as_ptr() length:string.len() encoding:UTF8_ENCODING as Id],
+            );
+            NSString(p)
+        }
     }
 
-    pub unsafe fn len(&self) -> usize {
-        msg_send![*self.0, lengthOfBytesUsingEncoding: UTF8_ENCODING]
+    pub fn len(&self) -> usize {
+        unsafe { msg_send![*self.0, lengthOfBytesUsingEncoding: UTF8_ENCODING] }
     }
 
-    pub unsafe fn as_str(&self) -> &str {
-        let bytes = {
-            let bytes: *const libc::c_char = msg_send![*self.0, UTF8String];
-            bytes as *const u8
-        };
-        let len = self.len();
-        let bytes = slice::from_raw_parts(bytes, len);
-        str::from_utf8(bytes).unwrap()
+    pub fn as_str(&self) -> &str {
+        unsafe {
+            let bytes = {
+                let bytes: *const libc::c_char = msg_send![*self.0, UTF8String];
+                bytes as *const u8
+            };
+            let len = self.len();
+            let bytes = slice::from_raw_parts(bytes, len);
+            str::from_utf8(bytes).unwrap()
+        }
     }
 }
 
@@ -85,67 +95,87 @@ impl From<StrongPtr> for NSString {
 pub struct NSURL(pub StrongPtr);
 
 impl NSURL {
-    pub unsafe fn url_with_string(url: &str) -> NSURL {
-        let url_nsstring = NSString::new(url);
-        let p = StrongPtr::retain(msg_send![class!(NSURL), URLWithString: url_nsstring]);
-        NSURL(p)
+    pub fn url_with_string(url: &str) -> NSURL {
+        unsafe {
+            let url_nsstring = NSString::new(url);
+            let p = StrongPtr::retain(msg_send![class!(NSURL), URLWithString: url_nsstring]);
+            NSURL(p)
+        }
     }
 
-    pub unsafe fn file_url_with_path(path: &str, is_directory: BOOL) -> NSURL {
-        let path_nsstring = NSString::new(path);
-        let p = StrongPtr::retain(
-            msg_send![class!(NSURL), fileURLWithPath:path_nsstring isDirectory:is_directory],
-        );
-        NSURL(p)
+    pub fn file_url_with_path(path: &str, is_directory: bool) -> NSURL {
+        unsafe {
+            let path_nsstring = NSString::new(path);
+            let is_directory_ = if is_directory { YES } else { NO };
+            let p = StrongPtr::retain(
+                msg_send![class!(NSURL), fileURLWithPath:path_nsstring isDirectory:is_directory_],
+            );
+            NSURL(p)
+        }
     }
 
-    pub unsafe fn check_resource_is_reachable_and_return_error(&self) -> BOOL {
-        let obj: Id = msg_send![*self.0, checkResourceIsReachableAndReturnError: NIL];
-        obj as BOOL
+    pub fn check_resource_is_reachable_and_return_error(&self) -> bool {
+        let b = unsafe {
+            let obj: Id = msg_send![*self.0, checkResourceIsReachableAndReturnError: NIL];
+            obj as BOOL
+        };
+        b == YES
     }
 
-    pub unsafe fn absolute_url(&self) -> NSURL {
-        let p = StrongPtr::retain(msg_send![*self.0, absoluteURL]);
-        NSURL(p)
+    pub fn absolute_url(&self) -> NSURL {
+        unsafe {
+            let p = StrongPtr::retain(msg_send![*self.0, absoluteURL]);
+            NSURL(p)
+        }
     }
 }
 
 pub struct NSFileHandle(pub StrongPtr);
 
 impl NSFileHandle {
-    pub unsafe fn new() -> NSFileHandle {
-        let p = StrongPtr::new(msg_send![class!(NSFileHandle), new]);
-        NSFileHandle(p)
+    pub fn new() -> NSFileHandle {
+        unsafe {
+            let p = StrongPtr::new(msg_send![class!(NSFileHandle), new]);
+            NSFileHandle(p)
+        }
     }
 
-    pub unsafe fn file_handle_with_standard_input() -> NSFileHandle {
-        let p = StrongPtr::retain(msg_send![class!(NSFileHandle), fileHandleWithStandardInput]);
-        NSFileHandle(p)
+    pub fn file_handle_with_standard_input() -> NSFileHandle {
+        unsafe {
+            let p = StrongPtr::retain(msg_send![class!(NSFileHandle), fileHandleWithStandardInput]);
+            NSFileHandle(p)
+        }
     }
 
-    pub unsafe fn file_handle_with_standard_output() -> NSFileHandle {
-        let p = StrongPtr::retain(msg_send![
-            class!(NSFileHandle),
-            fileHandleWithStandardOutput
-        ]);
-        NSFileHandle(p)
+    pub fn file_handle_with_standard_output() -> NSFileHandle {
+        unsafe {
+            let p = StrongPtr::retain(msg_send![
+                class!(NSFileHandle),
+                fileHandleWithStandardOutput
+            ]);
+            NSFileHandle(p)
+        }
     }
 }
 
 pub struct NSDictionary(pub StrongPtr);
 
 impl NSDictionary {
-    pub unsafe fn all_keys<T>(&self) -> NSArray<T> {
-        NSArray {
-            p: StrongPtr::retain(msg_send![*self.0, allKeys]),
-            _phantom: PhantomData,
+    pub fn all_keys<T>(&self) -> NSArray<T> {
+        unsafe {
+            NSArray {
+                p: StrongPtr::retain(msg_send![*self.0, allKeys]),
+                _phantom: PhantomData,
+            }
         }
     }
 
-    pub unsafe fn all_values<T>(&self) -> NSArray<T> {
-        NSArray {
-            p: StrongPtr::retain(msg_send![*self.0, allValues]),
-            _phantom: PhantomData,
+    pub fn all_values<T>(&self) -> NSArray<T> {
+        unsafe {
+            NSArray {
+                p: StrongPtr::retain(msg_send![*self.0, allValues]),
+                _phantom: PhantomData,
+            }
         }
     }
 }
@@ -153,43 +183,49 @@ impl NSDictionary {
 pub struct NSError(pub StrongPtr);
 
 impl NSError {
-    pub unsafe fn nil() -> NSError {
-        let p = StrongPtr::new(NIL);
-        NSError(p)
+    pub fn nil() -> NSError {
+        unsafe {
+            let p = StrongPtr::new(NIL);
+            NSError(p)
+        }
     }
 
-    pub unsafe fn code(&self) -> isize {
-        msg_send![*self.0, code]
+    pub fn code(&self) -> isize {
+        unsafe { msg_send![*self.0, code] }
     }
 
-    pub unsafe fn localized_description(&self) -> NSString {
-        NSString(StrongPtr::retain(msg_send![*self.0, localizedDescription]))
+    pub fn localized_description(&self) -> NSString {
+        unsafe { NSString(StrongPtr::retain(msg_send![*self.0, localizedDescription])) }
     }
 
-    pub unsafe fn localized_failure_reason(&self) -> NSString {
-        NSString(StrongPtr::retain(msg_send![
-            *self.0,
-            localizedFailureReason
-        ]))
+    pub fn localized_failure_reason(&self) -> NSString {
+        unsafe {
+            NSString(StrongPtr::retain(msg_send![
+                *self.0,
+                localizedFailureReason
+            ]))
+        }
     }
 
-    pub unsafe fn localized_recovery_suggestion(&self) -> NSString {
-        NSString(StrongPtr::retain(msg_send![
-            *self.0,
-            localizedRecoverySuggestion
-        ]))
+    pub fn localized_recovery_suggestion(&self) -> NSString {
+        unsafe {
+            NSString(StrongPtr::retain(msg_send![
+                *self.0,
+                localizedRecoverySuggestion
+            ]))
+        }
     }
 
-    pub unsafe fn help_anchor(&self) -> NSString {
-        NSString(StrongPtr::retain(msg_send![*self.0, helpAnchor]))
+    pub fn help_anchor(&self) -> NSString {
+        unsafe { NSString(StrongPtr::retain(msg_send![*self.0, helpAnchor])) }
     }
 
-    pub unsafe fn user_info(&self) -> NSDictionary {
-        NSDictionary(StrongPtr::retain(msg_send![*self.0, userInfo]))
+    pub fn user_info(&self) -> NSDictionary {
+        unsafe { NSDictionary(StrongPtr::retain(msg_send![*self.0, userInfo])) }
     }
 
-    pub unsafe fn dump(&self) {
-        let code: i64 = msg_send![*self.0, code];
+    pub fn dump(&self) {
+        let code = self.code();
         println!("code: {}", code);
         let localized_description = self.localized_description();
         println!("localizedDescription : {}", localized_description.as_str());
