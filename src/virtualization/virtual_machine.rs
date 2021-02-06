@@ -240,7 +240,7 @@ impl VZVirtualMachine {
         }
     }
 
-    pub fn start_with_completion_handler(&self, completion_handler: &Block<(Id,), ()>) {
+    pub fn start_with_completion_handler(&mut self, completion_handler: &Block<(Id,), ()>) {
         unsafe {
             let _: Id = msg_send![*self.0, startWithCompletionHandler: completion_handler];
         }

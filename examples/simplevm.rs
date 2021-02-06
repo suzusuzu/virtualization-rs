@@ -1,7 +1,10 @@
+extern crate virtualization_rs;
+
 use block::{Block, ConcreteBlock};
 use libc::sleep;
 use objc::rc::StrongPtr;
 use std::fs::canonicalize;
+use std::sync::{Arc, RwLock};
 use virtualization_rs::{
     base::{dispatch_async, dispatch_queue_create, Id, NSError, NSFileHandle, NIL},
     virtualization::{
@@ -123,7 +126,7 @@ fn main() {
         Ok(_) => {
             let label = std::ffi::CString::new("second").unwrap();
             let queue = unsafe { dispatch_queue_create(label.as_ptr(), NIL) };
-            let vm = VZVirtualMachine::new(conf, queue);
+            let vm = Arc::new(RwLock::new(VZVirtualMachine::new(conf, queue)));
             let dispatch_block = ConcreteBlock::new(move || {
                 let completion_handler = ConcreteBlock::new(|err: Id| {
                     if err != NIL {
@@ -133,7 +136,9 @@ fn main() {
                 });
                 let completion_handler = completion_handler.copy();
                 let completion_handler: &Block<(Id,), ()> = &completion_handler;
-                vm.start_with_completion_handler(completion_handler);
+                vm.write()
+                    .unwrap()
+                    .start_with_completion_handler(completion_handler);
             });
             let dispatch_block = dispatch_block.copy();
             let dispatch_block: &Block<(), ()> = &dispatch_block;
