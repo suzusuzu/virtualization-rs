@@ -40,7 +40,7 @@ struct Opt {
     command_line: String,
 
     #[structopt(short, long, parse(from_os_str))]
-    disk: PathBuf,
+    disk: Vec<PathBuf>,
 
     #[structopt(short, long, default_value = "4")]
     cpu: usize,
@@ -56,7 +56,7 @@ fn main() {
     let memory_size = opt.memory_size;
     let command_line = opt.command_line;
     let kernel = opt.kernel;
-    let disk = opt.disk;
+    let disks: Vec<PathBuf> = opt.disk;
     let initrd = opt.initrd;
 
     if !VZVirtualMachine::supported() {
@@ -90,23 +90,30 @@ fn main() {
     let serial = VZVirtioConsoleDeviceSerialPortConfiguration::new(attachement);
     let entropy = VZVirtioEntropyDeviceConfiguration::new();
     let memory_balloon = VZVirtioTraditionalMemoryBalloonDeviceConfiguration::new();
-    let block_attachment = match VZDiskImageStorageDeviceAttachmentBuilder::new()
-        .path(
-            canonicalize(&disk)
-                .unwrap()
-                .into_os_string()
-                .into_string()
-                .unwrap(),
-        )
-        .build()
-    {
-        Ok(x) => x,
-        Err(err) => {
-            err.dump();
-            return;
-        }
-    };
-    let block_device = VZVirtioBlockDeviceConfiguration::new(block_attachment);
+
+    let mut block_devices = Vec::with_capacity(disks.len());
+    for disk in &disks {
+        let block_attachment = match VZDiskImageStorageDeviceAttachmentBuilder::new()
+            .path(
+                canonicalize(disk)
+                    .unwrap()
+                    .into_os_string()
+                    .into_string()
+                    .unwrap(),
+            )
+            .read_only(false)
+            .build()
+        {
+            Ok(x) => x,
+            Err(err) => {
+                err.dump();
+                return;
+            }
+        };
+        let block_device = VZVirtioBlockDeviceConfiguration::new(block_attachment);
+        block_devices.push(block_device);
+    }
+
     let network_attachment = VZNATNetworkDeviceAttachment::new();
     let mut network_device = VZVirtioNetworkDeviceConfiguration::new(network_attachment);
     network_device.set_mac_address(VZMACAddress::random_locally_administered_address());
@@ -119,7 +126,7 @@ fn main() {
         .memory_balloon_devices(vec![memory_balloon])
         .network_devices(vec![network_device])
         .serial_ports(vec![serial])
-        .storage_devices(vec![block_device])
+        .storage_devices(block_devices)
         .build();
 
     match conf.validate_with_error() {
