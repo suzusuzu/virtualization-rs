@@ -5,7 +5,6 @@ use std::slice;
 use std::str;
 
 use block::Block;
-use libc::c_void;
 use objc::rc::StrongPtr;
 use objc::runtime::{Object, BOOL, NO, YES};
 use objc::{class, msg_send, sel, sel_impl};
@@ -16,10 +15,8 @@ extern "C" {}
 #[link(name = "Foundation", kind = "framework")]
 extern "C" {
     pub fn dispatch_queue_create(label: *const libc::c_char, attr: Id) -> Id;
-    // pub fn dispatch_sync(queue: Id, block: &Block<(), ()>);
-    pub fn dispatch_sync(queue: Id, block: *mut c_void);
+    pub fn dispatch_sync(queue: Id, block: &Block<(), ()>);
     pub fn dispatch_async(queue: Id, block: &Block<(), ()>);
-// pub fn dispatch_async(queue: Id, block: *mut c_void);
 }
 
 pub type Id = *mut Object;
