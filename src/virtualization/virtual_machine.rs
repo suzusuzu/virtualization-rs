@@ -189,11 +189,11 @@ impl VZVirtualMachineConfiguration {
     pub fn validate_with_error(&self) -> Result<BOOL, NSError> {
         unsafe {
             let error = NSError(StrongPtr::new(0 as Id));
-            let obj: Id = msg_send![*self.0, validateWithError: &(*error.0)];
+            let obj: BOOL = msg_send![*self.0, validateWithError: &(*error.0)];
             if error.code() != 0 {
                 Err(error)
             } else {
-                Ok(obj as BOOL)
+                Ok(obj)
             }
         }
     }
@@ -252,7 +252,7 @@ impl VZVirtualMachine {
         if error.code() != 0 {
             Err(error)
         } else {
-            Ok(ret == 1i8)
+            Ok(ret)
         }
     }
 
