@@ -22,6 +22,8 @@ extern "C" {
 pub type Id = *mut Object;
 pub const NIL: Id = 0 as Id;
 
+pub type NSUInteger = libc::c_ulong;
+
 pub struct NSArray<T> {
     pub _phantom: PhantomData<T>,
     pub p: StrongPtr,
