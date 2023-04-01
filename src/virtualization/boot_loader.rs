@@ -137,7 +137,12 @@ impl VZEFIVariableStoreInitializationOptions {
     }
 
     fn into_raw(self) -> NSUInteger {
-        self.options.iter().fold(NSUInteger::default(), |mut acc, v| { acc |= v.0; acc })
+        self.options
+            .iter()
+            .fold(NSUInteger::default(), |mut acc, v| {
+                acc |= v.0;
+                acc
+            })
     }
 }
 
@@ -191,9 +196,7 @@ impl VZEFIVariableStore {
     pub fn open<T: Into<String>>(file_url: T) -> Self {
         let file_url = NSURL::url_with_string(file_url.into().as_str());
         let i: Id = unsafe { msg_send![class!(VZEFIVariableStore), alloc] };
-        Self(unsafe {
-            StrongPtr::new(msg_send![i, initWithURL: file_url])
-        })
+        Self(unsafe { StrongPtr::new(msg_send![i, initWithURL: file_url]) })
     }
 }
 
@@ -223,9 +226,7 @@ impl VZEFIBootLoaderBuilder {
 pub struct VZEFIBootLoader(StrongPtr);
 
 impl VZEFIBootLoader {
-    unsafe fn new(
-        variable_store: Option<VZEFIVariableStore>,
-    ) -> Self {
+    unsafe fn new(variable_store: Option<VZEFIVariableStore>) -> Self {
         let p = StrongPtr::new(msg_send![class!(VZEFIBootLoader), new]);
         if let Some(v) = variable_store {
             let _: Id = msg_send![*p, setVariableStore: *v.0];
