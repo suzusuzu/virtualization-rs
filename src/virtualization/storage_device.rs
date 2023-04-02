@@ -119,3 +119,23 @@ impl VZStorageDeviceConfiguration for VZVirtioBlockDeviceConfiguration {
         *self.0
     }
 }
+
+/// The configuration object that represents a USB Mass storage device.
+pub struct VZUSBMassStorageDeviceConfiguration(StrongPtr);
+
+impl VZUSBMassStorageDeviceConfiguration {
+    /// Creates a new storage device configuration with the specified attachment.
+    pub fn new<T: VZStorageDeviceAttachment>(attachment: T) -> Self {
+        unsafe {
+            let i: Id = msg_send![class!(VZUSBMassStorageDeviceConfiguration), alloc];
+            let p = StrongPtr::new(msg_send![i, initWithAttachment:attachment.id()]);
+            Self(p)
+        }
+    }
+}
+
+impl VZStorageDeviceConfiguration for VZUSBMassStorageDeviceConfiguration {
+    fn id(&self) -> Id {
+        *self.0
+    }
+}
