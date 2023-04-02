@@ -12,6 +12,7 @@ use crate::{
 };
 
 use crate::virtualization::keyboard::VZKeyboardDeviceConfiguration;
+use crate::virtualization::pointing_device::VZPointingDeviceConfiguration;
 use block::Block;
 use objc::runtime::BOOL;
 use objc::{class, msg_send, sel, sel_impl};
@@ -107,6 +108,14 @@ impl VZVirtualMachineConfigurationBuilder {
         self
     }
 
+    pub fn pointing_devices<T: VZPointingDeviceConfiguration>(
+        mut self,
+        pointing_devices: Vec<T>,
+    ) -> Self {
+        self.conf.set_pointing_devices(pointing_devices);
+        self
+    }
+
     pub fn build(self) -> VZVirtualMachineConfiguration {
         self.conf
     }
@@ -197,6 +206,14 @@ impl VZVirtualMachineConfiguration {
         let arr: NSArray<T> = NSArray::array_with_objects(device_ids);
         unsafe {
             let _: () = msg_send![*self.0, setKeyboards:*arr.p];
+        }
+    }
+
+    fn set_pointing_devices<T: VZPointingDeviceConfiguration>(&mut self, devices: Vec<T>) {
+        let device_ids = devices.iter().map(|x| x.id()).collect();
+        let arr: NSArray<T> = NSArray::array_with_objects(device_ids);
+        unsafe {
+            let _: () = msg_send![*self.0, setPointingDevices:*arr.p];
         }
     }
 
