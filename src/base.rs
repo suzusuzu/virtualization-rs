@@ -5,6 +5,7 @@ use std::slice;
 use std::str;
 
 use block::Block;
+use libc::c_long;
 use objc::rc::StrongPtr;
 use objc::runtime::{Object, BOOL, NO, YES};
 use objc::{class, msg_send, sel, sel_impl};
@@ -21,6 +22,8 @@ extern "C" {
 
 pub type Id = *mut Object;
 pub const NIL: Id = 0 as Id;
+
+pub type NSInteger = c_long;
 
 pub struct NSArray<T> {
     pub _phantom: PhantomData<T>,
