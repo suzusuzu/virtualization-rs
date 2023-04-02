@@ -72,7 +72,7 @@ impl VZMACAddress {
     }
     pub fn random_locally_administered_address() -> VZMACAddress {
         let p = unsafe {
-            StrongPtr::new(msg_send![
+            StrongPtr::retain(msg_send![
                 class!(VZMACAddress),
                 randomLocallyAdministeredAddress
             ])
