@@ -2,6 +2,7 @@
 
 pub mod boot_loader;
 pub mod entropy_device;
+pub mod keyboard;
 pub mod memory_device;
 pub mod network_device;
 pub mod serial_port;

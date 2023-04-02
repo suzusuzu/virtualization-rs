@@ -11,6 +11,7 @@ use crate::{
     virtualization::storage_device::VZStorageDeviceConfiguration,
 };
 
+use crate::virtualization::keyboard::VZKeyboardDeviceConfiguration;
 use block::Block;
 use objc::runtime::BOOL;
 use objc::{class, msg_send, sel, sel_impl};
@@ -101,6 +102,11 @@ impl VZVirtualMachineConfigurationBuilder {
         self
     }
 
+    pub fn keyboards<T: VZKeyboardDeviceConfiguration>(mut self, keyboards: Vec<T>) -> Self {
+        self.conf.set_keyboards(keyboards);
+        self
+    }
+
     pub fn build(self) -> VZVirtualMachineConfiguration {
         self.conf
     }
@@ -183,6 +189,14 @@ impl VZVirtualMachineConfiguration {
         let arr: NSArray<T> = NSArray::array_with_objects(device_ids);
         unsafe {
             let _: () = msg_send![*self.0, setStorageDevices:*arr.p];
+        }
+    }
+
+    fn set_keyboards<T: VZKeyboardDeviceConfiguration>(&mut self, devices: Vec<T>) {
+        let device_ids = devices.iter().map(|x| x.id()).collect();
+        let arr: NSArray<T> = NSArray::array_with_objects(device_ids);
+        unsafe {
+            let _: () = msg_send![*self.0, setKeyboards:*arr.p];
         }
     }
 
