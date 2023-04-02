@@ -65,6 +65,14 @@ impl VZVirtualMachineConfigurationBuilder {
         self
     }
 
+    pub fn graphics_devices<T: VZGraphicsDeviceConfiguration>(
+        mut self,
+        graphics_devices: Vec<T>,
+    ) -> Self {
+        self.conf.set_graphics_devices(graphics_devices);
+        self
+    }
+
     pub fn memory_balloon_devices<T: VZMemoryBalloonDeviceConfiguration>(
         mut self,
         memory_balloon_devices: Vec<T>,
@@ -99,14 +107,6 @@ impl VZVirtualMachineConfigurationBuilder {
         storage_devices: Vec<T>,
     ) -> Self {
         self.conf.set_storage_devices(storage_devices);
-        self
-    }
-
-    pub fn graphics_devices<T: VZGraphicsDeviceConfiguration>(
-        mut self,
-        graphics_devices: Vec<T>,
-    ) -> Self {
-        self.conf.set_graphics_devices(graphics_devices);
         self
     }
 
@@ -152,6 +152,14 @@ impl VZVirtualMachineConfiguration {
         }
     }
 
+    fn set_graphics_devices<T: VZGraphicsDeviceConfiguration>(&mut self, devices: Vec<T>) {
+        let device_ids = devices.iter().map(|x| x.id()).collect();
+        let arr: NSArray<T> = NSArray::array_with_objects(device_ids);
+        unsafe {
+            let _: () = msg_send![*self.0, setGraphicsDevices:*arr.p];
+        }
+    }
+
     fn set_memory_balloon_devices<T: VZMemoryBalloonDeviceConfiguration>(
         &mut self,
         devices: Vec<T>,
@@ -192,14 +200,6 @@ impl VZVirtualMachineConfiguration {
         let arr: NSArray<T> = NSArray::array_with_objects(device_ids);
         unsafe {
             let _: () = msg_send![*self.0, setStorageDevices:*arr.p];
-        }
-    }
-
-    fn set_graphics_devices<T: VZGraphicsDeviceConfiguration>(&mut self, devices: Vec<T>) {
-        let device_ids = devices.iter().map(|x| x.id()).collect();
-        let arr: NSArray<T> = NSArray::array_with_objects(device_ids);
-        unsafe {
-            let _: () = msg_send![*self.0, setGraphicsDevices:*arr.p];
         }
     }
 
