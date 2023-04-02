@@ -4,15 +4,15 @@ use crate::{
     base::{Id, NSArray, NSError},
     virtualization::boot_loader::VZBootLoader,
     virtualization::entropy_device::VZEntropyDeviceConfiguration,
+    virtualization::keyboard::VZKeyboardConfiguration,
     virtualization::memory_device::VZMemoryBalloonDeviceConfiguration,
     virtualization::network_device::VZNetworkDeviceConfiguration,
+    virtualization::pointing_device::VZPointingDeviceConfiguration,
     virtualization::serial_port::VZSerialPortConfiguration,
     virtualization::socket_device::VZSocketDeviceConfiguration,
     virtualization::storage_device::VZStorageDeviceConfiguration,
 };
 
-use crate::virtualization::keyboard::VZKeyboardDeviceConfiguration;
-use crate::virtualization::pointing_device::VZPointingDeviceConfiguration;
 use block::Block;
 use objc::runtime::BOOL;
 use objc::{class, msg_send, sel, sel_impl};
@@ -103,7 +103,7 @@ impl VZVirtualMachineConfigurationBuilder {
         self
     }
 
-    pub fn keyboards<T: VZKeyboardDeviceConfiguration>(mut self, keyboards: Vec<T>) -> Self {
+    pub fn keyboards<T: VZKeyboardConfiguration>(mut self, keyboards: Vec<T>) -> Self {
         self.conf.set_keyboards(keyboards);
         self
     }
@@ -201,7 +201,7 @@ impl VZVirtualMachineConfiguration {
         }
     }
 
-    fn set_keyboards<T: VZKeyboardDeviceConfiguration>(&mut self, devices: Vec<T>) {
+    fn set_keyboards<T: VZKeyboardConfiguration>(&mut self, devices: Vec<T>) {
         let device_ids = devices.iter().map(|x| x.id()).collect();
         let arr: NSArray<T> = NSArray::array_with_objects(device_ids);
         unsafe {
