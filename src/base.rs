@@ -22,6 +22,7 @@ extern "C" {
 pub type Id = *mut Object;
 pub const NIL: Id = 0 as Id;
 
+pub type NSInteger = libc::c_long;
 pub type NSUInteger = libc::c_ulong;
 
 pub struct NSArray<T> {

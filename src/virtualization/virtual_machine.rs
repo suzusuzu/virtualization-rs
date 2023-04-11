@@ -4,6 +4,7 @@ use crate::{
     base::{Id, NSArray, NSError},
     virtualization::boot_loader::VZBootLoader,
     virtualization::entropy_device::VZEntropyDeviceConfiguration,
+    virtualization::graphics_device::VZGraphicsDeviceConfiguration,
     virtualization::keyboard::VZKeyboardConfiguration,
     virtualization::memory_device::VZMemoryBalloonDeviceConfiguration,
     virtualization::network_device::VZNetworkDeviceConfiguration,
@@ -63,6 +64,14 @@ impl VZVirtualMachineConfigurationBuilder {
         entropy_devices: Vec<T>,
     ) -> Self {
         self.conf.set_entropy_devices(entropy_devices);
+        self
+    }
+
+    pub fn graphics_devices<T: VZGraphicsDeviceConfiguration>(
+        mut self,
+        graphics_devices: Vec<T>,
+    ) -> Self {
+        self.conf.set_graphics_devices(graphics_devices);
         self
     }
 
@@ -155,6 +164,14 @@ impl VZVirtualMachineConfiguration {
         let arr: NSArray<T> = NSArray::array_with_objects(device_ids);
         unsafe {
             let _: () = msg_send![*self.0, setEntropyDevices:*arr.p];
+        }
+    }
+
+    fn set_graphics_devices<T: VZGraphicsDeviceConfiguration>(&mut self, devices: Vec<T>) {
+        let device_ids = devices.iter().map(|x| x.id()).collect();
+        let arr: NSArray<T> = NSArray::array_with_objects(device_ids);
+        unsafe {
+            let _: () = msg_send![*self.0, setGraphicsDevices:*arr.p];
         }
     }
 
@@ -271,6 +288,14 @@ impl VZVirtualMachine {
         }
     }
 
+    pub fn new_without_queue(conf: VZVirtualMachineConfiguration) -> VZVirtualMachine {
+        unsafe {
+            let i: Id = msg_send![class!(VZVirtualMachine), alloc];
+            let p = StrongPtr::new(msg_send![i, initWithConfiguration:*conf.0]);
+            VZVirtualMachine(p)
+        }
+    }
+
     pub fn start_with_completion_handler(&mut self, completion_handler: &Block<(Id,), ()>) {
         unsafe {
             let _: Id = msg_send![*self.0, startWithCompletionHandler: completion_handler];
@@ -306,5 +331,9 @@ impl VZVirtualMachine {
             6 => VZVirtualMachineState::VZVirtualMachineStateResuming,
             _ => VZVirtualMachineState::Other,
         }
+    }
+
+    pub unsafe fn id(&self) -> Id {
+        *self.0
     }
 }
