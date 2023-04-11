@@ -4,8 +4,10 @@ use crate::{
     base::{Id, NSArray, NSError},
     virtualization::boot_loader::VZBootLoader,
     virtualization::entropy_device::VZEntropyDeviceConfiguration,
+    virtualization::keyboard::VZKeyboardConfiguration,
     virtualization::memory_device::VZMemoryBalloonDeviceConfiguration,
     virtualization::network_device::VZNetworkDeviceConfiguration,
+    virtualization::pointing_device::VZPointingDeviceConfiguration,
     virtualization::serial_port::VZSerialPortConfiguration,
     virtualization::socket_device::VZSocketDeviceConfiguration,
     virtualization::storage_device::VZStorageDeviceConfiguration,
@@ -64,6 +66,11 @@ impl VZVirtualMachineConfigurationBuilder {
         self
     }
 
+    pub fn keyboards<T: VZKeyboardConfiguration>(mut self, keyboards: Vec<T>) -> Self {
+        self.conf.set_keyboards(keyboards);
+        self
+    }
+
     pub fn memory_balloon_devices<T: VZMemoryBalloonDeviceConfiguration>(
         mut self,
         memory_balloon_devices: Vec<T>,
@@ -77,6 +84,14 @@ impl VZVirtualMachineConfigurationBuilder {
         network_devices: Vec<T>,
     ) -> Self {
         self.conf.set_network_devices(network_devices);
+        self
+    }
+
+    pub fn pointing_devices<T: VZPointingDeviceConfiguration>(
+        mut self,
+        pointing_devices: Vec<T>,
+    ) -> Self {
+        self.conf.set_pointing_devices(pointing_devices);
         self
     }
 
@@ -143,6 +158,14 @@ impl VZVirtualMachineConfiguration {
         }
     }
 
+    fn set_keyboards<T: VZKeyboardConfiguration>(&mut self, devices: Vec<T>) {
+        let device_ids = devices.iter().map(|x| x.id()).collect();
+        let arr: NSArray<T> = NSArray::array_with_objects(device_ids);
+        unsafe {
+            let _: () = msg_send![*self.0, setKeyboards:*arr.p];
+        }
+    }
+
     fn set_memory_balloon_devices<T: VZMemoryBalloonDeviceConfiguration>(
         &mut self,
         devices: Vec<T>,
@@ -159,6 +182,14 @@ impl VZVirtualMachineConfiguration {
         let arr: NSArray<T> = NSArray::array_with_objects(device_ids);
         unsafe {
             let _: () = msg_send![*self.0, setNetworkDevices:*arr.p];
+        }
+    }
+
+    fn set_pointing_devices<T: VZPointingDeviceConfiguration>(&mut self, devices: Vec<T>) {
+        let device_ids = devices.iter().map(|x| x.id()).collect();
+        let arr: NSArray<T> = NSArray::array_with_objects(device_ids);
+        unsafe {
+            let _: () = msg_send![*self.0, setPointingDevices:*arr.p];
         }
     }
 
