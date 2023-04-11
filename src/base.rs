@@ -33,7 +33,7 @@ pub struct NSArray<T> {
 impl<T> NSArray<T> {
     pub fn array_with_objects(objects: Vec<Id>) -> NSArray<T> {
         unsafe {
-            let p = StrongPtr::new(
+            let p = StrongPtr::retain(
                 msg_send![class!(NSArray), arrayWithObjects:objects.as_slice().as_ptr() count:objects.len()],
             );
             NSArray {
